@@ -9,9 +9,13 @@
 #include <GL/glew.h>
 #include "TrainzTexture.h"
 
+int scrw = 1400;
+int scrh = 1024;
 SDL_Window* window;
 std::shared_ptr<TzTexture> activeTex;
-GLuint activeTexID = 0;
+std::vector<GLuint> loadedTextures;
+
+//GLuint activeTexID = 0;
 void draw();
 
 void deleteTexture(GLuint& texID)
@@ -20,19 +24,32 @@ void deleteTexture(GLuint& texID)
 	texID = 0;
 }
 
-GLuint loadTexture(const char* path)
+GLenum GetWrapGL(const WrapValue& value)
 {
-	activeTex = read_texture(path);
+	switch (value)
+	{
+	case WrapValue::Clamp:
+		return GL_CLAMP;
+	case WrapValue::Clamp_To_Edge:
+		return GL_CLAMP_TO_EDGE;
+	case WrapValue::Repeat:
+		return GL_REPEAT;
+	}
+}
 
+GLuint loadTexture(int texIndex)
+{
 	GLuint texID = 0;
 	glGenTextures(1, &texID);
 	glBindTexture(GL_TEXTURE_2D, texID);
 
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, activeTex->textureMips.size() - 1);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GetWrapGL(activeTex->WrapS));
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GetWrapGL(activeTex->WrapT));
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 
 	GLenum format = GL_BGRA;
@@ -73,11 +90,11 @@ GLuint loadTexture(const char* path)
 	//	//glTexImage2D(GL_TEXTURE_2D, i, GL_RGBA, activeTex->Width, activeTex->Height, 0, format, GL_UNSIGNED_BYTE, activeTex->textureMips[0].data);
 	//	glCompressedTexImage2D(GL_TEXTURE_2D, i, format, mipWidth, mipHeight, 0, activeTex->textureMips[i].size, activeTex->textureMips[i].data);
 	//}
-
+	const auto& mip = activeTex->Textures[texIndex].textureMips[0];
 	if(!compressed)
-		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, activeTex->Width, activeTex->Height, 0, format, dtype, activeTex->Textures[0].textureMips[0].data);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, activeTex->Width, activeTex->Height, 0, format, dtype, mip.data);
 	else
-		glCompressedTexImage2D(GL_TEXTURE_2D, 0, format, activeTex->Width, activeTex->Height, 0, activeTex->Textures[0].textureMips[0].size, activeTex->Textures[0].textureMips[0].data);
+		glCompressedTexImage2D(GL_TEXTURE_2D, 0, format, activeTex->Width, activeTex->Height, 0, mip.size, mip.data);
 
 	glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -104,9 +121,6 @@ void resizeGLScene(GLsizei width, GLsizei height)
 	glLoadIdentity();
 }
 
-int scrw = 1400;
-int scrh = 1024;
-
 int filterEvent(void* userdata, SDL_Event* event) {
 	if (event->type == SDL_WINDOWEVENT && event->window.event == SDL_WINDOWEVENT_RESIZED) {
 		scrw = event->window.data1;
@@ -118,36 +132,127 @@ int filterEvent(void* userdata, SDL_Event* event) {
 	return 1;
 }
 
+#define glf(a) ((a - 0.5f) * 2.0f)
+
+void drawTile(float x, float y, float width, float height)
+{
+	float tileWidth = (width / 4.0f) * 2.0f;
+	float tileHeight = (height / 3.0f) * 2.0f;
+
+	float xoffset = -width + tileWidth * (float)x;
+	float yoffset = -height + tileHeight * (float)y;
+
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, 1.0f);
+	glVertex2f(xoffset, yoffset);
+	glTexCoord2f(1.0f, 1.0f);
+	glVertex2f(xoffset + tileWidth, yoffset);
+	glTexCoord2f(1.0f, 0.0f);
+	glVertex2f(xoffset + tileWidth, yoffset + tileHeight);
+	glTexCoord2f(0.0f, 0.0f);
+	glVertex2f(xoffset, yoffset + tileHeight);
+	glEnd();
+}
+
 void draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glLoadIdentity();
 
+	AlphaMode blendmode = AlphaMode::Transparent;
+	if (activeTex->ResourceType == TzTexture::FileType::E2TF)
+		blendmode = dynamic_cast<E2TFTexture*>(activeTex.get())->AlphaBehavior;
+
+	switch (blendmode)
+	{
+	default:
+	case AlphaMode::Opaque:
+		glDisable(GL_BLEND);
+		break;
+	case AlphaMode::Masked:
+	case AlphaMode::Transparent:
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		break;
+	}
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	//resizeGLScene(DM.w, DM.h);
 	float aspect = (float)activeTex->Width / (float)activeTex->Height;
 
-	//float aspect = (float)DM.w / (float)DM.h;
-	float width = (float)activeTex->Width / (float)scrw;
-	float height = (float)activeTex->Height / (float)scrh;
-	float max = std::max(width, height);
-	width = width / max;
-	height = height / max;
+	int numTextures = loadedTextures.size();
 
-	//width = 1.0f;
-	//height = 1.0f;
+	if (activeTex->Type != TextureType::Cubemap)
+	{
+		float width = (float)activeTex->Width / (float)scrw * numTextures;
+		float height = (float)activeTex->Height / (float)scrh;
+		float max = std::max(width, height);
+		width = width / max;
+		height = height / max;
+		float tileWidth = width / (float)numTextures;
 
-	glBindTexture(GL_TEXTURE_2D, activeTexID);
-	//glColor3f(0.0f, 1.0f, 0.0f);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 1.0f);
-	glVertex2f(-width, -height);
-	glTexCoord2f(1.0f, 1.0f);
-	glVertex2f(width, -height);
-	glTexCoord2f(1.0f, 0.0f);
-	glVertex2f(width, height);
-	glTexCoord2f(0.0f, 0.0f);
-	glVertex2f(-width, height);
-	glEnd();
+		for (int i = 0; i < numTextures; i++)
+		{
+			glBindTexture(GL_TEXTURE_2D, loadedTextures[i]);
+			glBegin(GL_QUADS);
+			float xoffset = glf((float)i / (float)numTextures) * width;
+			glTexCoord2f(0.0f, 1.0f);
+			glVertex2f(xoffset, -height);
+			glTexCoord2f(1.0f, 1.0f);
+			glVertex2f(xoffset + tileWidth * 2, -height);
+			glTexCoord2f(1.0f, 0.0f);
+			glVertex2f(xoffset + tileWidth * 2, height);
+			glTexCoord2f(0.0f, 0.0f);
+			glVertex2f(xoffset, height);
+			glEnd();
+		}
+	}
+	else
+	{
+
+		float width = (float)activeTex->Width / (float)scrw * 4.0f;
+		float height = (float)activeTex->Height / (float)scrh * 3.0f;
+		float max = std::max(width, height);
+		width = width / max;
+		height = height / max;
+		//in the range of -width, -height to width, height
+
+
+		//right
+		glBindTexture(GL_TEXTURE_2D, loadedTextures[0]);
+		drawTile(2, 1, width, height);
+
+		//left
+		glBindTexture(GL_TEXTURE_2D, loadedTextures[1]);
+		drawTile(0, 1, width, height);
+
+		//top
+		glBindTexture(GL_TEXTURE_2D, loadedTextures[2]);
+		drawTile(1, 2, width, height);
+
+		//bottom
+		glBindTexture(GL_TEXTURE_2D, loadedTextures[3]);
+		drawTile(1, 0, width, height);
+
+		//front
+		glBindTexture(GL_TEXTURE_2D, loadedTextures[4]);
+		drawTile(1, 1, width, height);
+
+		//back
+		glBindTexture(GL_TEXTURE_2D, loadedTextures[5]);
+		drawTile(3, 1, width, height);
+	}
+	
+	//glTexCoord2f(0.0f, 1.0f);
+	//glVertex2f(-width, -height);
+	//glTexCoord2f(1.0f, 1.0f);
+	//glVertex2f(width, -height);
+	//glTexCoord2f(1.0f, 0.0f);
+	//glVertex2f(width, height);
+	//glTexCoord2f(0.0f, 0.0f);
+	//glVertex2f(-width, height);
+	
 
 	SDL_GL_SwapWindow(window);
 }
@@ -189,7 +294,11 @@ int main(int argc, char** argv)
 
 	//activeTexID = loadTexture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture");
 	//activeTexID = loadTexture("G:/Games/N3V/trs19/build hhl1hrpw1/editing//kuid -25 1332 QR PB15/mesh/pb15_738_sp_boiler_albedo.texture");
-	activeTexID = loadTexture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 268447 1646 Skarloey Railway Sheds/brick.texture");
+	//activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture");
+	activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 30501 311279 Generic Environmental/cubemap.texture");
+	//activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 268447 1646 Skarloey Railway Sheds/brick.texture");
+	for(int i = 0; i < activeTex->Textures.size(); i++)
+		loadedTextures.push_back(loadTexture(i));
 
 	resizeGLScene(scrw, scrh);
 
@@ -207,8 +316,12 @@ int main(int argc, char** argv)
 			}
 			else if (event.type == SDL_DROPFILE)
 			{
-				deleteTexture(activeTexID);
-				activeTexID = loadTexture(event.drop.file);
+				for (auto& tex : loadedTextures)
+					deleteTexture(tex);
+				loadedTextures.clear();
+				activeTex = read_texture(event.drop.file);
+				for (int i = 0; i < activeTex->Textures.size(); i++)
+					loadedTextures.push_back(loadTexture(i));
 			}
 			//if (event.type == SDL_WINDOWEVENT)
 			//{

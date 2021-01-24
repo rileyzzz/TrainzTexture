@@ -23,13 +23,13 @@
 JIRFTexture::JIRFTexture(IOArchive& Ar) : TzTexture(FileType::JIRF)
 {
 	if (!Serialize(Ar))
-		std::cout << "Encountered file read error at " << Ar.tellg() << "\n";
+		std::cout << "Encountered file read error at offset " << Ar.tellg() << "\n";
 }
 
 E2TFTexture::E2TFTexture(IOArchive& Ar) : TzTexture(FileType::E2TF), AlphaBehavior(AlphaMode::Opaque)
 {
 	if(!Serialize(Ar))
-		std::cout << "Encountered file read error at " << Ar.tellg() << "\n";
+		std::cout << "Encountered file read error at offset " << Ar.tellg() << "\n";
 }
 
 bool JIRFTexture::Serialize(IOArchive& Ar)
