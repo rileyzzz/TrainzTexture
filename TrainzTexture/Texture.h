@@ -94,6 +94,7 @@ public:
 	TextureFormat Format;
 
 	std::vector<TextureData> Textures;
+	uint32_t MipCount = 0;
 
 	//TzTexture(const char* filepath);
 	virtual bool Serialize(IOArchive& Ar) = 0;
@@ -116,6 +117,7 @@ public:
 	uint32_t MipFilter;
 	uint32_t unknown1 = 0;
 	float unknown2 = 1.0f;
+	uint32_t unknown3[4] = { 0x00 };
 public:
 	bool Serialize(IOArchive& Ar) override;
 

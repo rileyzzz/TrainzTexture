@@ -63,8 +63,7 @@ bool JIRFTexture::Serialize(IOArchive& Ar)
 	//}
 	//Ar << CompressionLevel;
 
-	uint32_t MipCount = 0;
-	if (Textures.size()) MipCount = Textures[0].textureMips.size();
+	//if (Textures.size()) MipCount = Textures[0].textureMips.size();
 	Ar << MipCount;
 	
 	uint32_t TexCount = Textures.size();
@@ -92,10 +91,7 @@ bool JIRFTexture::Serialize(IOArchive& Ar)
 	Ar << unknown1;
 	if(version >= 0x104) Ar << unknown2;
 	if (version == 0x107)
-	{
-		uint32_t unknown3[4] = { 0x00 };
 		Ar << unknown3;
-	}
 	
 	std::cout << "info end " << Ar.tellg() << "\n";
 	for (auto& tex : Textures)
@@ -124,9 +120,10 @@ bool E2TFTexture::Serialize(IOArchive& Ar)
 	std::cout << "version " << version << " size: " << Width << "x" << Height << "\n";
 	Ar << unknown1;
 
-	uint8_t MipCount = 0;
-	if(Textures.size()) MipCount = Textures[0].textureMips.size();
-	Ar << MipCount;
+	//if(Ar.IsSaving() && Textures.size()) MipCount = Textures[0].textureMips.size();
+	uint8_t E2MipCount = MipCount;
+	Ar << E2MipCount;
+	if (Ar.IsLoading()) MipCount = E2MipCount;
 
 	Ar << AlphaBehavior;
 

@@ -3,16 +3,20 @@
 
 #include <iostream>
 #include <numeric>
+#include <sstream>
 #define NOMINMAX
 #include <windows.h>
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include <GL/glew.h>
 #include "TrainzTexture.h"
 
 int scrw = 1400;
 int scrh = 1024;
 SDL_Window* window;
+TTF_Font* MainFont;
 std::shared_ptr<TzTexture> activeTex;
+std::stringstream TextureInfo;
 std::vector<GLuint> loadedTextures;
 
 //GLuint activeTexID = 0;
@@ -109,6 +113,129 @@ GLuint loadTexture(int texIndex)
 	return texID;
 
 }
+//RGBA8888 = 0,
+//BGRA8888,
+//RGB0888,
+//BGR0888,
+//RGB888,
+//BGR888,
+//BGRA4444,
+//BGR565,
+//BGR555,
+//DXT1 = 10,
+//DXT3 = 11,
+//DXT5 = 12,
+//DXT5_BridgeIt = 13,
+//HD4F //E2TF
+const char* FormatString(const TextureFormat& format)
+{
+	switch (format)
+	{
+	case TextureFormat::RGBA8888:
+		return "uncompressed RGBA8888";
+	case TextureFormat::BGRA8888:
+		return "uncompressed BGRA8888";
+	case TextureFormat::RGB0888:
+		return "uncompressed RGB0888";
+	case TextureFormat::BGR0888:
+		return "uncompressed BGR0888";
+	case TextureFormat::RGB888:
+		return "uncompressed RGB888";
+	case TextureFormat::BGR888:
+		return "uncompressed BGR888";
+	case TextureFormat::BGRA4444:
+		return "uncompressed BGRA4444";
+	case TextureFormat::BGR565:
+		return "uncompressed BGR565";
+	case TextureFormat::BGR555:
+		return "uncompressed BGR555";
+	case TextureFormat::DXT1:
+		return "compressed DXT1";
+	case TextureFormat::DXT3:
+		return "compressed DXT3";
+	case TextureFormat::DXT5:
+		return "compressed DXT5";
+	case TextureFormat::DXT5_BridgeIt:
+		return "compressed DXT5 (Bridge It)";
+	case TextureFormat::HD4F:
+		return "uncompressed HD4F (HDR)";
+	}
+}
+const char* TypeString(const TextureType& type)
+{
+	switch (type)
+	{
+	case TextureType::TwoSided:
+		return "two sided";
+	case TextureType::OneSided:
+		return "one sided";
+	case TextureType::Cubemap:
+		return "cubemap";
+	case TextureType::Volume:
+		return "volume";
+	}
+}
+std::string AlphaString(const AlphaMode& mode)
+{
+	switch (mode)
+	{
+	case AlphaMode::Opaque:
+		return "opaque";
+	case AlphaMode::Masked:
+		return "masked";
+	case AlphaMode::Transparent:
+		return "transparent";
+	default:
+		return ("unknown - " + std::to_string((uint8_t)mode));
+	}
+}
+
+void SetTextureInfo()
+{
+	TextureInfo.str(std::string()); //clear the stringstream
+	TextureInfo << "Resource Type: " << (activeTex->ResourceType == TzTexture::FileType::E2TF ? "E2 Texture Format" : "JET Engine Texture Format") << "\n";
+	std::stringstream version;
+	if (activeTex->ResourceType == TzTexture::FileType::JIRF)
+		version << "0x" << std::hex;
+	version << activeTex->version;
+	TextureInfo << "Version: " << version.str() << "\n";
+	TextureInfo << "Image: " << activeTex->Width << "x" << activeTex->Height << " " << FormatString(activeTex->Format) << "\n";
+	TextureInfo << "Type: " << TypeString(activeTex->Type) << "\n";
+	TextureInfo << activeTex->Textures.size() << " texture" << (activeTex->Textures.size() == 1 ? "" : "s") << "\n";
+	TextureInfo << activeTex->MipCount << " mip level" << (activeTex->MipCount == 1 ? "" : "s") << "\n";
+
+	std::stringstream wrapstring;
+	if (activeTex->WrapS != WrapValue::Repeat && activeTex->WrapT != WrapValue::Repeat)
+		wrapstring << "none";
+	else
+		wrapstring << (activeTex->WrapS == WrapValue::Repeat ? "s" : "") << (activeTex->WrapT == WrapValue::Repeat ? "t" : "");
+	TextureInfo << "Tile: " << wrapstring.str() << "\n";
+
+	switch (activeTex->ResourceType)
+	{
+	case TzTexture::FileType::JIRF:
+	{
+		JIRFTexture* tex = dynamic_cast<JIRFTexture*>(activeTex.get());
+		TextureInfo << "MipHint: " << (tex->Hint == MipHint::Static ? "static" : "dynamic") << "\n";
+		TextureInfo << "Filter min: " << tex->MinFilter << " mag: " << tex->MagFilter << " mip: " << tex->MipFilter << "\n";
+		TextureInfo << "Unknown Values: \n";
+		TextureInfo << tex->unknown1 << " (0x103)\n";
+		if (tex->version >= 0x104)
+			TextureInfo << tex->unknown2 << " (0x104)\n";
+		if (tex->version == 0x107)
+			TextureInfo << tex->unknown3[0] << " " << tex->unknown3[1] << " " << tex->unknown3[2] << " " << tex->unknown3[3] << " (0x107)\n";
+		break;
+	}
+	case TzTexture::FileType::E2TF:
+	{
+		E2TFTexture* tex = dynamic_cast<E2TFTexture*>(activeTex.get());
+		TextureInfo << "Alpha: " << AlphaString(tex->AlphaBehavior) << "\n";
+		TextureInfo << "Reference Color: R: " << (uint32_t)tex->base_color[0] << " G: " << (uint32_t)tex->base_color[1] << " B: " << (uint32_t)tex->base_color[2] << " A: " << (uint32_t)tex->base_color[3] << "\n";
+		TextureInfo << "Unknown Values: " << (uint32_t)tex->unknown1 << " " << (uint32_t)tex->unknown2 << " (default 0 1)\n";
+	}
+	}
+
+}
 
 void resizeGLScene(GLsizei width, GLsizei height)
 {
@@ -137,6 +264,36 @@ int filterEvent(void* userdata, SDL_Event* event) {
 	return 1;
 }
 
+void RenderText(const char* text, int X, int Y, SDL_Color color = { 255, 255, 255 })
+{
+	GLuint TextureID = 0;
+	//SDL_Color White = { 255, 255, 255 };
+	SDL_Surface* surfaceMessage = TTF_RenderText_Blended(MainFont, text, color);
+
+	glGenTextures(1, &TextureID);
+	glBindTexture(GL_TEXTURE_2D, TextureID);
+	int Mode = GL_RGBA;
+	glTexImage2D(GL_TEXTURE_2D, 0, Mode, surfaceMessage->w, surfaceMessage->h, 0, Mode, GL_UNSIGNED_BYTE, surfaceMessage->pixels);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, TextureID);
+	// For Ortho mode, of course
+	int TextWidth = surfaceMessage->w;
+	int TextHeight = surfaceMessage->h;
+
+	glBegin(GL_QUADS);
+	glTexCoord2f(0, 0); glVertex3f(X, Y, 0);
+	glTexCoord2f(1, 0); glVertex3f(X + TextWidth, Y, 0);
+	glTexCoord2f(1, -1); glVertex3f(X + TextWidth, Y + TextHeight, 0);
+	glTexCoord2f(0, -1); glVertex3f(X, Y + TextHeight, 0);
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
+	glDeleteTextures(1, &TextureID);
+	SDL_FreeSurface(surfaceMessage);
+}
+
 #define glf(a) ((a - 0.5f) * 2.0f)
 
 void drawTile(float x, float y, float width, float height)
@@ -162,6 +319,11 @@ void drawTile(float x, float y, float width, float height)
 void draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glMatrixMode(GL_MODELVIEW);
+
 	glLoadIdentity();
 
 	AlphaMode blendmode = AlphaMode::Transparent;
@@ -184,10 +346,9 @@ void draw()
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	//resizeGLScene(DM.w, DM.h);
-	float aspect = (float)activeTex->Width / (float)activeTex->Height;
+	glEnable(GL_TEXTURE_2D);
 
 	int numTextures = loadedTextures.size();
-
 	if (activeTex->Type != TextureType::Cubemap)
 	{
 		float width = (float)activeTex->Width / (float)scrw * numTextures;
@@ -248,7 +409,28 @@ void draw()
 		glBindTexture(GL_TEXTURE_2D, loadedTextures[5]);
 		drawTile(3, 1, width, height);
 	}
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	gluOrtho2D(0, scrw, 0, scrh);
+	/*glScalef(1, -1, 1);
+	glTranslatef(0, -height, 0);*/
+	glMatrixMode(GL_MODELVIEW);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	int infoheight = 22;
+	std::stringstream ss(TextureInfo.str());
+	std::string to;
+	while (std::getline(ss, to, '\n'))
+	{
+		RenderText(to.c_str(), 12, scrh - infoheight);
+		infoheight += 14;
+	}
 	
+
 	//glTexCoord2f(0.0f, 1.0f);
 	//glVertex2f(-width, -height);
 	//glTexCoord2f(1.0f, 1.0f);
@@ -282,10 +464,12 @@ int main(int argc, char** argv)
 
 	SDL_GLContext glcontext = SDL_GL_CreateContext(window);
 	if (glewInit() != GLEW_OK)
-	{
 		std::cout << "GLEW failed to init.\n";
-	}
 
+	if (TTF_Init() == -1)
+		printf("error initializing SDL_ttf: %s\n", TTF_GetError());
+
+	MainFont = TTF_OpenFont("C:/Windows/Fonts/arial.ttf", 12);
 
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_NORMALIZE);
@@ -302,6 +486,7 @@ int main(int argc, char** argv)
 	//activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture");
 	activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 30501 311279 Generic Environmental/cubemap.texture");
 	//activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 268447 1646 Skarloey Railway Sheds/brick.texture");
+	SetTextureInfo();
 	for(int i = 0; i < activeTex->Textures.size(); i++)
 		loadedTextures.push_back(loadTexture(i));
 
@@ -325,6 +510,7 @@ int main(int argc, char** argv)
 					deleteTexture(tex);
 				loadedTextures.clear();
 				activeTex = read_texture(event.drop.file);
+				SetTextureInfo();
 				for (int i = 0; i < activeTex->Textures.size(); i++)
 					loadedTextures.push_back(loadTexture(i));
 			}
