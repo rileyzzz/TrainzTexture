@@ -40,9 +40,9 @@ bool JIRFTexture::Serialize(IOArchive& Ar)
 	if (!Ar.ChunkHeader("INFO")) return false;
 	uint32_t infosize = 60;
 	Ar << infosize;
-	uint32_t version = 0x103;
+	version = 0x103;
 	Ar << version;
-	if (version != 0x103)
+	if (version != 0x103 && version != 0x104 && version != 0x107) //104 bridge it
 	{
 		std::cout << "Unsupported info version!\n";
 		return false;
@@ -66,12 +66,13 @@ bool JIRFTexture::Serialize(IOArchive& Ar)
 	uint32_t MipCount = 0;
 	if (Textures.size()) MipCount = Textures[0].textureMips.size();
 	Ar << MipCount;
-
+	
 	uint32_t TexCount = Textures.size();
 	Ar << TexCount;
 	if (Ar.IsLoading()) Textures.resize(TexCount);
 
 	Ar << Format;
+
 	Ar << Width;
 	Ar << Height;
 
@@ -79,6 +80,8 @@ bool JIRFTexture::Serialize(IOArchive& Ar)
 	Ar << WrapS;
 	Ar << WrapT;
 
+	std::cout << "mips: " << MipCount << " textures: " << TexCount << " format: " << (uint32_t)Format << " size: " << Width << "x" << Height << "\n";
+		 
 	uint32_t Reserved = 0;
 	Ar << Reserved;
 
@@ -87,7 +90,14 @@ bool JIRFTexture::Serialize(IOArchive& Ar)
 	Ar << MipFilter;
 
 	Ar << unknown1;
-
+	if(version >= 0x104) Ar << unknown2;
+	if (version == 0x107)
+	{
+		uint32_t unknown3[4] = { 0x00 };
+		Ar << unknown3;
+	}
+	
+	std::cout << "info end " << Ar.tellg() << "\n";
 	for (auto& tex : Textures)
 	{
 		if(Ar.IsLoading()) tex.textureMips.resize(MipCount);
@@ -99,9 +109,9 @@ bool JIRFTexture::Serialize(IOArchive& Ar)
 			if (Ar.IsLoading()) mip.data = new uint8_t[mip.size];
 			Ar.Serialize(mip.data, mip.size);
 			std::cout << "mip size " << mip.size << "\n";
+			//std::cout << "location " << Ar.tellg() << "\n";
 		}
 	}
-
 	return true;
 }
 

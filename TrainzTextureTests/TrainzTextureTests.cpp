@@ -60,6 +60,10 @@ GLuint loadTexture(int texIndex)
 	switch (activeTex->Format)
 	{
 	default:
+	case TextureFormat::BGR0888:
+		format = GL_BGRA;
+		internalformat = GL_RGB;
+		break;
 	case TextureFormat::BGRA8888:
 		format = GL_BGRA;
 		internalformat = GL_RGBA;
@@ -72,6 +76,7 @@ GLuint loadTexture(int texIndex)
 		compressed = true;
 		format = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
 		break;
+	case TextureFormat::DXT5_BridgeIt:
 	case TextureFormat::DXT5:
 		compressed = true;
 		format = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;

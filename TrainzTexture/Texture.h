@@ -36,9 +36,10 @@ enum class TextureFormat : uint32_t
 	BGRA4444,
 	BGR565,
 	BGR555,
-	DXT1,
-	DXT3,
-	DXT5,
+	DXT1 = 10,
+	DXT3 = 11,
+	DXT5 = 12,
+	DXT5_BridgeIt = 13,
 	HD4F //E2TF
 };
 
@@ -114,6 +115,7 @@ public:
 	uint32_t MagFilter;
 	uint32_t MipFilter;
 	uint32_t unknown1 = 0;
+	float unknown2 = 1.0f;
 public:
 	bool Serialize(IOArchive& Ar) override;
 
