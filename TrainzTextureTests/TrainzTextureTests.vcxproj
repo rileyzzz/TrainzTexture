@@ -88,7 +88,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../TrainzTexture;C:\Users\riley\source\repos\MeshEditor\libs\SDL2-2.0.12\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glm;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glew-2.1.0\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\SDL2_ttf-2.0.15\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../TrainzTexture;C:\Users\riley\source\repos\MeshEditor\libs\SDL2-2.0.12\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glm;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glew-2.1.0\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\SDL2_ttf-2.0.15\include;C:/Users/riley/source/repos/TrainzTextureTests/libs/DirectXTex-jan2021/DirectXTex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../TrainzTexture;C:\Users\riley\source\repos\MeshEditor\libs\SDL2-2.0.12\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glm;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glew-2.1.0\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\SDL2_ttf-2.0.15\include;C:/Users/riley/source/repos/TrainzTextureTests/libs/DirectXTex-jan2021/DirectXTex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -105,7 +106,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../TrainzTexture;C:\Users\riley\source\repos\MeshEditor\libs\SDL2-2.0.12\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glm;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glew-2.1.0\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\SDL2_ttf-2.0.15\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../TrainzTexture;C:\Users\riley\source\repos\MeshEditor\libs\SDL2-2.0.12\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glm;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glew-2.1.0\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\SDL2_ttf-2.0.15\include;C:/Users/riley/source/repos/TrainzTextureTests/libs/DirectXTex-jan2021/DirectXTex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -122,7 +123,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../TrainzTexture;C:\Users\riley\source\repos\MeshEditor\libs\SDL2-2.0.12\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glm;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glew-2.1.0\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\SDL2_ttf-2.0.15\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../TrainzTexture;C:\Users\riley\source\repos\MeshEditor\libs\SDL2-2.0.12\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glm;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glew-2.1.0\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\SDL2_ttf-2.0.15\include;C:/Users/riley/source/repos/TrainzTextureTests/libs/DirectXTex-jan2021/DirectXTex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,7 +140,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../TrainzTexture;C:\Users\riley\source\repos\MeshEditor\libs\SDL2-2.0.12\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glm;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glew-2.1.0\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\SDL2_ttf-2.0.15\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../TrainzTexture;C:\Users\riley\source\repos\MeshEditor\libs\SDL2-2.0.12\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glm;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\binaries\glew-2.1.0\include;C:\Users\riley\Desktop\Trainz\CCS\TrainzmeshViewer\SDL2_ttf-2.0.15\include;C:/Users/riley/source/repos/TrainzTextureTests/libs/DirectXTex-jan2021/DirectXTex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -151,7 +152,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="TextureSave.cpp" />
     <ClCompile Include="TrainzTextureTests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TextureSave.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libs\DirectXTex-jan2021\DirectXTex\DirectXTex_Desktop_2019.vcxproj">
+      <Project>{371b9fa9-4c90-4ac6-a123-aced756d6c77}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

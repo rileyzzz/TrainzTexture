@@ -10,6 +10,7 @@
 #include <SDL_ttf.h>
 #include <GL/glew.h>
 #include "TrainzTexture.h"
+#include "TextureSave.h"
 
 int scrw = 1400;
 int scrh = 1024;
@@ -91,9 +92,9 @@ GLuint loadTexture(int texIndex)
 		dtype = GL_FLOAT;
 		format = GL_RGBA;
 		internalformat = GL_RGB16F;
+		break;
 	case TextureFormat::MFTS_ETC2:
 		compressed = true;
-		
 		format = GL_COMPRESSED_RGB8_ETC2;
 		//format = GL_COMPRESSED_RGBA8_ETC2_EAC;
 		break;
@@ -458,9 +459,20 @@ void draw()
 	SDL_GL_SwapWindow(window);
 }
 
+void saveTex()
+{
+	MessageBoxA(0, "save", "info", MB_OK);
+	SaveDDS("", *activeTex);
+}
+
 int main(int argc, char** argv)
 {
-    
+	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	if (FAILED(hr))
+	{
+		std::cout << "Error initializing DirectX\n";
+		return 0;
+	}
 
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
 	SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
@@ -497,9 +509,9 @@ int main(int argc, char** argv)
 
 	//activeTexID = loadTexture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture");
 	//activeTexID = loadTexture("G:/Games/N3V/trs19/build hhl1hrpw1/editing//kuid -25 1332 QR PB15/mesh/pb15_738_sp_boiler_albedo.texture");
-	//activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture");
+	activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture");
 	//activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 30501 311279 Generic Environmental/cubemap.texture");
-	activeTex = read_texture("G:/P9L/MFTSRips/alltextures/eric.texture");
+	//activeTex = read_texture("G:/P9L/MFTSRips/alltextures/eric.texture");
 	//activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 268447 1646 Skarloey Railway Sheds/brick.texture");
 	SetTextureInfo();
 	for(int i = 0; i < activeTex->Textures.size(); i++)
@@ -528,6 +540,17 @@ int main(int argc, char** argv)
 				SetTextureInfo();
 				for (int i = 0; i < activeTex->Textures.size(); i++)
 					loadedTextures.push_back(loadTexture(i));
+			}
+
+			switch (event.type)
+			{
+			case SDL_KEYDOWN:
+			{
+				auto* keystate = SDL_GetKeyboardState(NULL);
+				if (keystate[SDL_SCANCODE_LCTRL] && event.key.keysym.sym == SDLK_s)
+					saveTex();
+				break;
+			}
 			}
 			//if (event.type == SDL_WINDOWEVENT)
 			//{
