@@ -40,6 +40,7 @@ enum class TextureFormat : uint32_t
 	DXT3 = 11,
 	DXT5 = 12,
 	DXT5_BridgeIt = 13,
+	MFTS_ETC2 = 28,
 	HD4F //E2TF
 };
 
@@ -118,6 +119,7 @@ public:
 	uint32_t unknown1 = 0;
 	float unknown2 = 1.0f;
 	uint32_t unknown3[4] = { 0x00 };
+	float base_color[4];
 public:
 	bool Serialize(IOArchive& Ar) override;
 

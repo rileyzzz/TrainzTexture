@@ -42,7 +42,7 @@ bool JIRFTexture::Serialize(IOArchive& Ar)
 	Ar << infosize;
 	version = 0x103;
 	Ar << version;
-	if (version != 0x103 && version != 0x104 && version != 0x107) //104 bridge it
+	if (version != 0x103 && version != 0x104 && version != 0x107 && version != 0x108) //104 bridge it
 	{
 		std::cout << "Unsupported info version!\n";
 		return false;
@@ -89,9 +89,13 @@ bool JIRFTexture::Serialize(IOArchive& Ar)
 	Ar << MipFilter;
 
 	Ar << unknown1;
+	//if (version == 0x108) Ar << unknown3;
 	if(version >= 0x104) Ar << unknown2;
-	if (version == 0x107)
+	//if (version == 0x108) Ar << unknown4;
+	if (version >= 0x107)
 		Ar << unknown3;
+
+	if (version == 0x108) Ar << base_color;
 	
 	std::cout << "info end " << Ar.tellg() << "\n";
 	for (auto& tex : Textures)

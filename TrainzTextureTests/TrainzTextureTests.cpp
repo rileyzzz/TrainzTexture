@@ -21,6 +21,7 @@ std::vector<GLuint> loadedTextures;
 
 //GLuint activeTexID = 0;
 void draw();
+std::string FormatString(const TextureFormat& format);
 
 void deleteTexture(GLuint& texID)
 {
@@ -64,6 +65,7 @@ GLuint loadTexture(int texIndex)
 	switch (activeTex->Format)
 	{
 	default:
+		MessageBoxA(0, ("Unhandled texture format: " + FormatString(activeTex->Format)).c_str(), "info", MB_OK);
 	case TextureFormat::BGR0888:
 		format = GL_BGRA;
 		internalformat = GL_RGB;
@@ -74,7 +76,7 @@ GLuint loadTexture(int texIndex)
 		break;
 	case TextureFormat::DXT1:
 		compressed = true;
-		format = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+		format = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT; //just RGB?
 		break;
 	case TextureFormat::DXT3:
 		compressed = true;
@@ -89,6 +91,11 @@ GLuint loadTexture(int texIndex)
 		dtype = GL_FLOAT;
 		format = GL_RGBA;
 		internalformat = GL_RGB16F;
+	case TextureFormat::MFTS_ETC2:
+		compressed = true;
+		
+		format = GL_COMPRESSED_RGB8_ETC2;
+		//format = GL_COMPRESSED_RGBA8_ETC2_EAC;
 		break;
 	}
 
@@ -127,7 +134,7 @@ GLuint loadTexture(int texIndex)
 //DXT5 = 12,
 //DXT5_BridgeIt = 13,
 //HD4F //E2TF
-const char* FormatString(const TextureFormat& format)
+std::string FormatString(const TextureFormat& format)
 {
 	switch (format)
 	{
@@ -159,9 +166,13 @@ const char* FormatString(const TextureFormat& format)
 		return "compressed DXT5 (Bridge It)";
 	case TextureFormat::HD4F:
 		return "uncompressed HD4F (HDR)";
+	case TextureFormat::MFTS_ETC2:
+		return "compressed ETC2 (mobile)";
+	default:
+		return ("unknown - " + std::to_string((uint32_t)format));
 	}
 }
-const char* TypeString(const TextureType& type)
+std::string TypeString(const TextureType& type)
 {
 	switch (type)
 	{
@@ -173,6 +184,8 @@ const char* TypeString(const TextureType& type)
 		return "cubemap";
 	case TextureType::Volume:
 		return "volume";
+	default:
+		return ("unknown - " + std::to_string((uint32_t)type));
 	}
 }
 std::string AlphaString(const AlphaMode& mode)
@@ -186,7 +199,7 @@ std::string AlphaString(const AlphaMode& mode)
 	case AlphaMode::Transparent:
 		return "transparent";
 	default:
-		return ("unknown - " + std::to_string((uint8_t)mode));
+		return ("unknown - " + std::to_string((uint32_t)mode));
 	}
 }
 
@@ -232,6 +245,7 @@ void SetTextureInfo()
 		TextureInfo << "Alpha: " << AlphaString(tex->AlphaBehavior) << "\n";
 		TextureInfo << "Reference Color: R: " << (uint32_t)tex->base_color[0] << " G: " << (uint32_t)tex->base_color[1] << " B: " << (uint32_t)tex->base_color[2] << " A: " << (uint32_t)tex->base_color[3] << "\n";
 		TextureInfo << "Unknown Values: " << (uint32_t)tex->unknown1 << " " << (uint32_t)tex->unknown2 << " (default 0 1)\n";
+		break;
 	}
 	}
 
@@ -484,7 +498,8 @@ int main(int argc, char** argv)
 	//activeTexID = loadTexture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture");
 	//activeTexID = loadTexture("G:/Games/N3V/trs19/build hhl1hrpw1/editing//kuid -25 1332 QR PB15/mesh/pb15_738_sp_boiler_albedo.texture");
 	//activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture");
-	activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 30501 311279 Generic Environmental/cubemap.texture");
+	//activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 30501 311279 Generic Environmental/cubemap.texture");
+	activeTex = read_texture("G:/P9L/MFTSRips/alltextures/eric.texture");
 	//activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 268447 1646 Skarloey Railway Sheds/brick.texture");
 	SetTextureInfo();
 	for(int i = 0; i < activeTex->Textures.size(); i++)
