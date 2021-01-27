@@ -1,7 +1,8 @@
 #pragma once
 #include "TrainzTexture.h"
 
-void SaveDDS(const wchar_t* path, const TzTexture& tex, int texIndex = 0);
-void SaveTGA(const wchar_t* path, const TzTexture& tex, int texIndex = 0);
-void SavePNG(const wchar_t* path, const TzTexture& tex, int texIndex = 0);
-void SaveHDR(const wchar_t* path, const TzTexture& tex, int texIndex = 0);
+bool SaveDDS(const wchar_t* path, const TzTexture& tex, int texIndex = 0);
+bool SaveTGA(const wchar_t* path, const TzTexture& tex, int texIndex = 0);
+bool SavePNG(const wchar_t* path, const TzTexture& tex, int texIndex = 0);
+bool SaveHDR(const wchar_t* path, const TzTexture& tex, int texIndex = 0);
+void SaveTextureTXT(const wchar_t* path, const TzTexture& tex);

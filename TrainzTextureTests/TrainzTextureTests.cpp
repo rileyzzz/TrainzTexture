@@ -338,7 +338,6 @@ void drawTile(float x, float y, float width, float height)
 
 void draw()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -459,25 +458,24 @@ void draw()
 	//glVertex2f(width, height);
 	//glTexCoord2f(0.0f, 0.0f);
 	//glVertex2f(-width, height);
-	
-
-	SDL_GL_SwapWindow(window);
 }
 
-void saveTexFile(const wchar_t* path, int texIndex = 0)
+bool saveTexFile(const wchar_t* path, int texIndex = 0)
 {
 	std::filesystem::path outPath(path);
+	std::cout << "save to " << outPath.string() << "\n";
 	std::string ext = outPath.extension().string();
 	if (ext == ".dds")
-		SaveDDS(path, *activeTex, texIndex);
+		return SaveDDS(path, *activeTex, texIndex);
 	else if (ext == ".tga")
-		SaveTGA(path, *activeTex, texIndex);
+		return SaveTGA(path, *activeTex, texIndex);
 	else if (ext == ".hdr")
-		SaveHDR(path, *activeTex, texIndex);
+		return SaveHDR(path, *activeTex, texIndex);
 	else if (ext == ".png")
-		SavePNG(path, *activeTex, texIndex);
+		return SavePNG(path, *activeTex, texIndex);
 	else
 		std::cout << "Unrecognized format '" << ext << "'\n";
+	return false;
 }
 
 std::string cubemapDirString(int index)
@@ -547,12 +545,13 @@ void saveTex()
 				hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
 				if (SUCCEEDED(hr))
 				{
+					bool exportSuccessful = true;
 					std::filesystem::path outPath(pszFilePath);
 					switch (activeTex->Type)
 					{
 					default:
 					case TextureType::OneSided:
-						saveTexFile(pszFilePath);
+						exportSuccessful = exportSuccessful && saveTexFile(pszFilePath);
 						break;
 					case TextureType::TwoSided:
 					case TextureType::Volume:
@@ -560,7 +559,7 @@ void saveTex()
 						for (int i = 0; i < activeTex->Textures.size(); i++)
 						{
 							std::filesystem::path finalPath = outPath.parent_path() / (outPath.stem().string() + "_" + std::to_string(i) + outPath.extension().string());
-							saveTexFile(finalPath.wstring().c_str(), i);
+							exportSuccessful = exportSuccessful && saveTexFile(finalPath.wstring().c_str(), i);
 						}
 						break;
 					}
@@ -569,13 +568,16 @@ void saveTex()
 						for (int i = 0; i < activeTex->Textures.size(); i++)
 						{
 							std::filesystem::path finalPath = outPath.parent_path() / (outPath.stem().string() + "_" + cubemapDirString(i) + outPath.extension().string());
-							saveTexFile(finalPath.wstring().c_str(), i);
+							exportSuccessful = exportSuccessful && saveTexFile(finalPath.wstring().c_str(), i);
 						}
 						break;
 					}
 					}
 					
-
+					if (exportSuccessful)
+						SaveTextureTXT(pszFilePath, *activeTex);
+					else
+						std::cout << "Texture export failed.\n";
 					CoTaskMemFree(pszFilePath);
 				}
 			}
@@ -646,17 +648,18 @@ int main(int argc, char** argv)
 	//glDepthFunc(GL_LEQUAL);
 	//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
-	const char* debugPath = "G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture";
-	//activeTexID = loadTexture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture");
-	//activeTexID = loadTexture("G:/Games/N3V/trs19/build hhl1hrpw1/editing//kuid -25 1332 QR PB15/mesh/pb15_738_sp_boiler_albedo.texture");
-	activeTex = read_texture(debugPath);
-	//activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 30501 311279 Generic Environmental/cubemap.texture");
-	//activeTex = read_texture("G:/P9L/MFTSRips/alltextures/eric.texture");
-	//activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 268447 1646 Skarloey Railway Sheds/brick.texture");
-	currentFile = std::filesystem::path(debugPath);
-	SetTextureInfo();
-	for(int i = 0; i < activeTex->Textures.size(); i++)
-		loadedTextures.push_back(loadTexture(i));
+	//const char* debugPath = "G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture";
+	////activeTexID = loadTexture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture");
+	////activeTexID = loadTexture("G:/Games/N3V/trs19/build hhl1hrpw1/editing//kuid -25 1332 QR PB15/mesh/pb15_738_sp_boiler_albedo.texture");
+	//activeTex = read_texture(debugPath);
+	////activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 30501 311279 Generic Environmental/cubemap.texture");
+	////activeTex = read_texture("G:/P9L/MFTSRips/alltextures/eric.texture");
+	////activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 268447 1646 Skarloey Railway Sheds/brick.texture");
+	//currentFile = std::filesystem::path(debugPath);
+	//SetTextureInfo();
+	//for(int i = 0; i < activeTex->Textures.size(); i++)
+	//	loadedTextures.push_back(loadTexture(i));
+
 
 	resizeGLScene(scrw, scrh);
 
@@ -705,8 +708,12 @@ int main(int argc, char** argv)
 			//	}
 			//}
 		}
+		glClear(GL_COLOR_BUFFER_BIT);
 
-		draw();
+		if(activeTex.get())
+			draw();
+
+		SDL_GL_SwapWindow(window);
 	}
 
 	CoUninitialize();
