@@ -6,17 +6,22 @@
 #include <sstream>
 #define NOMINMAX
 #include <windows.h>
+#include <shobjidl.h>
+#include <atlcomcli.h>
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <GL/glew.h>
 #include "TrainzTexture.h"
 #include "TextureSave.h"
+#include <filesystem>
 
 int scrw = 1400;
 int scrh = 1024;
 SDL_Window* window;
 TTF_Font* MainFont;
 std::shared_ptr<TzTexture> activeTex;
+//wchar_t currentFileDir[MAX_PATH];
+std::filesystem::path currentFile;
 std::stringstream TextureInfo;
 std::vector<GLuint> loadedTextures;
 
@@ -177,10 +182,10 @@ std::string TypeString(const TextureType& type)
 {
 	switch (type)
 	{
-	case TextureType::TwoSided:
-		return "two sided";
 	case TextureType::OneSided:
 		return "one sided";
+	case TextureType::TwoSided:
+		return "two sided";
 	case TextureType::Cubemap:
 		return "cubemap";
 	case TextureType::Volume:
@@ -459,10 +464,144 @@ void draw()
 	SDL_GL_SwapWindow(window);
 }
 
+void saveTexFile(const wchar_t* path, int texIndex = 0)
+{
+	std::filesystem::path outPath(path);
+	std::string ext = outPath.extension().string();
+	if (ext == ".dds")
+		SaveDDS(path, *activeTex, texIndex);
+	else if (ext == ".tga")
+		SaveTGA(path, *activeTex, texIndex);
+	else if (ext == ".hdr")
+		SaveHDR(path, *activeTex, texIndex);
+	else if (ext == ".png")
+		SavePNG(path, *activeTex, texIndex);
+	else
+		std::cout << "Unrecognized format '" << ext << "'\n";
+}
+
+std::string cubemapDirString(int index)
+{
+	switch (index)
+	{
+	default:
+	case 0:
+		return "right";
+	case 1:
+		return "left";
+	case 2:
+		return "top";
+	case 3:
+		return "bottom";
+	case 4:
+		return "front";
+	case 5:
+		return "back";
+	}
+}
+
 void saveTex()
 {
-	MessageBoxA(0, "save", "info", MB_OK);
-	SaveDDS("", *activeTex);
+	//MessageBoxA(0, "save", "info", MB_OK);
+	//SaveDDS("", *activeTex);
+	std::wstring initialTexName = currentFile.stem().wstring() + L".dds";
+	std::filesystem::path texPath = currentFile.parent_path() / (currentFile.stem().string() + ".dds");
+	std::cout << "texpath " << texPath.string() << "\n";
+
+	//wchar_t filepath[MAX_PATH];
+	//ZeroMemory(&filepath, sizeof(filepath));
+
+	//wchar_t initialDir[MAX_PATH];
+	//wcscpy_s(initialDir, currentFile.parent_path().wstring().c_str());
+
+	COMDLG_FILTERSPEC rgSpec[] =
+	{
+		{ L"DirectDraw Surface (DDS)", L"*.dds" },
+		{ L"TGA", L"*.tga" },
+		{ L"HDR", L"*.hdr" },
+		{ L"PNG", L"*.png" },
+		//{ L"All Files", L"*.*" },
+	};
+
+	CComPtr<IFileSaveDialog> pFileOpen;
+	HRESULT hr = CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_ALL, IID_IFileSaveDialog, reinterpret_cast<void**>(&pFileOpen));
+	if (SUCCEEDED(hr))
+	{
+		CComPtr<IShellItem> psiFolder;
+		hr = SHCreateItemFromParsingName(currentFile.parent_path().wstring().c_str(), NULL, IID_PPV_ARGS(&psiFolder));
+		if(SUCCEEDED(hr))
+			pFileOpen->SetFolder(psiFolder);
+
+		pFileOpen->SetFileName(initialTexName.c_str());
+		pFileOpen->SetDefaultExtension(L"dds");
+		
+		pFileOpen->SetFileTypes(_countof(rgSpec), rgSpec);
+		hr = pFileOpen->Show(NULL);
+		if (SUCCEEDED(hr))
+		{
+			CComPtr<IShellItem> pItem;
+			hr = pFileOpen->GetResult(&pItem);
+			if (SUCCEEDED(hr))
+			{
+				PWSTR pszFilePath;
+				hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+				if (SUCCEEDED(hr))
+				{
+					std::filesystem::path outPath(pszFilePath);
+					switch (activeTex->Type)
+					{
+					default:
+					case TextureType::OneSided:
+						saveTexFile(pszFilePath);
+						break;
+					case TextureType::TwoSided:
+					case TextureType::Volume:
+					{
+						for (int i = 0; i < activeTex->Textures.size(); i++)
+						{
+							std::filesystem::path finalPath = outPath.parent_path() / (outPath.stem().string() + "_" + std::to_string(i) + outPath.extension().string());
+							saveTexFile(finalPath.wstring().c_str(), i);
+						}
+						break;
+					}
+					case TextureType::Cubemap:
+					{
+						for (int i = 0; i < activeTex->Textures.size(); i++)
+						{
+							std::filesystem::path finalPath = outPath.parent_path() / (outPath.stem().string() + "_" + cubemapDirString(i) + outPath.extension().string());
+							saveTexFile(finalPath.wstring().c_str(), i);
+						}
+						break;
+					}
+					}
+					
+
+					CoTaskMemFree(pszFilePath);
+				}
+			}
+		}
+	}
+
+	
+
+	//OPENFILENAME ofn;
+	//ZeroMemory(&ofn, sizeof(ofn));
+	//ofn.lStructSize = sizeof(ofn);
+	//ofn.hwndOwner = NULL;
+	//ofn.lpstrFilter = L"DDS Image\0 *.dds\0All Files\0 *.*\0";
+	//ofn.lpstrFile = filepath;
+	//ofn.nMaxFile = MAX_PATH;
+	//ofn.lpstrTitle = L"Save Texture";
+	//ofn.lpstrInitialDir = initialDir;
+	////ofn.lpstrFileTitle =
+	//ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+
+	//if (GetSaveFileName(&ofn))
+	//	SaveDDS(filepath, *activeTex);
+	//else
+	//	std::cout << "Failed to save file.\n";
+	//ofn.
+	//GetOpenFileNameA();
 }
 
 int main(int argc, char** argv)
@@ -470,7 +609,7 @@ int main(int argc, char** argv)
 	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 	if (FAILED(hr))
 	{
-		std::cout << "Error initializing DirectX\n";
+		std::cout << "Error initializing COM\n";
 		return 0;
 	}
 
@@ -507,12 +646,14 @@ int main(int argc, char** argv)
 	//glDepthFunc(GL_LEQUAL);
 	//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
+	const char* debugPath = "G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture";
 	//activeTexID = loadTexture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture");
 	//activeTexID = loadTexture("G:/Games/N3V/trs19/build hhl1hrpw1/editing//kuid -25 1332 QR PB15/mesh/pb15_738_sp_boiler_albedo.texture");
-	activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 401543 2102 Loading Screen Logo/ts3-logo.texture");
+	activeTex = read_texture(debugPath);
 	//activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 30501 311279 Generic Environmental/cubemap.texture");
 	//activeTex = read_texture("G:/P9L/MFTSRips/alltextures/eric.texture");
 	//activeTex = read_texture("G:/Games/N3V/trs19/build hhl1hrpw1/editing/kuid 268447 1646 Skarloey Railway Sheds/brick.texture");
+	currentFile = std::filesystem::path(debugPath);
 	SetTextureInfo();
 	for(int i = 0; i < activeTex->Textures.size(); i++)
 		loadedTextures.push_back(loadTexture(i));
@@ -533,6 +674,8 @@ int main(int argc, char** argv)
 			}
 			else if (event.type == SDL_DROPFILE)
 			{
+				//MultiByteToWideChar(CP_UTF8, 0, event.drop.file, -1, nameW, MAX_PATH);
+				currentFile = std::filesystem::path(event.drop.file);
 				for (auto& tex : loadedTextures)
 					deleteTexture(tex);
 				loadedTextures.clear();
@@ -566,5 +709,6 @@ int main(int argc, char** argv)
 		draw();
 	}
 
+	CoUninitialize();
     return 0;
 }

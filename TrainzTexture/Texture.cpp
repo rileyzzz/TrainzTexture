@@ -222,7 +222,7 @@ uint8_t GetE2Type(const TextureType& type)
 	switch (type)
 	{
 	default:
-	case TextureType::TwoSided:
+	case TextureType::OneSided:
 		return 0;
 	case TextureType::Cubemap:
 		return 2;
@@ -236,7 +236,7 @@ TextureType GetType(const uint8_t& type)
 	default:
 		std::cout << "Unknown type " << static_cast<int>(type) << "\n";
 	case 0: //intentional pass through
-		return TextureType::TwoSided;
+		return TextureType::OneSided;
 	case 2:
 		return TextureType::Cubemap;
 	}

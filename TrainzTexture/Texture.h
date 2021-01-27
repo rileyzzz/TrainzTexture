@@ -12,8 +12,8 @@ enum class AlphaMode : uint8_t
 
 enum class TextureType : uint32_t
 {
-	TwoSided = 0,
-	OneSided,
+	OneSided = 0,
+	TwoSided,
 	Cubemap,
 	Volume
 };
