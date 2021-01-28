@@ -26,7 +26,7 @@ JIRFTexture::JIRFTexture(IOArchive& Ar) : TzTexture(FileType::JIRF)
 		std::cout << "Encountered file read error at offset " << Ar.tellg() << "\n";
 }
 
-E2TFTexture::E2TFTexture(IOArchive& Ar) : TzTexture(FileType::E2TF), AlphaBehavior(AlphaMode::Opaque)
+E2TFTexture::E2TFTexture(IOArchive& Ar) : TzTexture(FileType::E2TF)
 {
 	if(!Serialize(Ar))
 		std::cout << "Encountered file read error at offset " << Ar.tellg() << "\n";
@@ -88,7 +88,10 @@ bool JIRFTexture::Serialize(IOArchive& Ar)
 	Ar << MagFilter;
 	Ar << MipFilter;
 
-	Ar << unknown1;
+	//uint32_t AlphaHint = (uint8_t)AlphaBehavior - 1;
+	Ar << AlphaBehavior;
+	//AlphaBehavior = (AlphaMode)(AlphaHint + 1);
+
 	//if (version == 0x108) Ar << unknown3;
 	if(version >= 0x104) Ar << unknown2;
 	//if (version == 0x108) Ar << unknown4;
@@ -129,7 +132,9 @@ bool E2TFTexture::Serialize(IOArchive& Ar)
 	Ar << E2MipCount;
 	if (Ar.IsLoading()) MipCount = E2MipCount;
 
-	Ar << AlphaBehavior;
+	uint8_t AlphaHint = GetE2Alpha(AlphaBehavior);
+	Ar << AlphaHint;
+	if (Ar.IsLoading()) AlphaBehavior = GetAlpha(AlphaHint);
 
 	uint8_t TexType = GetE2Type(Type);
 	Ar << TexType;
@@ -215,6 +220,34 @@ bool E2TFTexture::Serialize(IOArchive& Ar)
 	std::cout << "file end " << Ar.tellg() << "\n";
 
 	return true;
+}
+
+uint8_t GetE2Alpha(const AlphaMode& mode)
+{
+	switch (mode)
+	{
+	default:
+	case AlphaMode::Opaque:
+		return 1;
+	case AlphaMode::Masked:
+		return 2;
+	case AlphaMode::Transparent:
+		return 3;
+	}
+}
+
+AlphaMode GetAlpha(const uint8_t& mode)
+{
+	switch (mode)
+	{
+	default:
+	case 1:
+		return AlphaMode::Opaque;
+	case 2:
+		return AlphaMode::Masked;
+	case 3:
+		return AlphaMode::Transparent;
+	}
 }
 
 uint8_t GetE2Type(const TextureType& type)

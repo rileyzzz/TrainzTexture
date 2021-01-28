@@ -3,11 +3,18 @@
 #include <vector>
 class IOArchive;
 
-enum class AlphaMode : uint8_t
+//enum class AlphaMode : uint8_t
+//{
+//	Opaque = 1,
+//	Masked = 2,
+//	Transparent = 3
+//};
+
+enum class AlphaMode : uint32_t
 {
-	Opaque = 1,
-	Masked = 2,
-	Transparent = 3
+	Opaque = 0,
+	Transparent,
+	Masked
 };
 
 enum class TextureType : uint32_t
@@ -17,6 +24,7 @@ enum class TextureType : uint32_t
 	Cubemap,
 	Volume
 };
+
 
 enum class WrapValue : uint32_t
 {
@@ -43,6 +51,9 @@ enum class TextureFormat : uint32_t
 	MFTS_ETC2 = 28,
 	HD4F //E2TF
 };
+
+uint8_t GetE2Alpha(const AlphaMode& mode);
+AlphaMode GetAlpha(const uint8_t& mode);
 
 uint8_t GetE2Type(const TextureType& type);
 TextureType GetType(const uint8_t& type);
@@ -94,6 +105,8 @@ public:
 	WrapValue WrapT;
 	TextureFormat Format;
 
+	AlphaMode AlphaBehavior;
+
 	std::vector<TextureData> Textures;
 	uint32_t MipCount = 0;
 
@@ -116,8 +129,8 @@ public:
 	uint32_t MinFilter;
 	uint32_t MagFilter;
 	uint32_t MipFilter;
-	uint32_t unknown1 = 0;
-	float unknown2 = 1.0f;
+	//TextureUsage UsageType;
+	float unknown2 = 1.0f; //world size? 16 for baseboard
 	uint32_t unknown3[4] = { 0x00 };
 	float base_color[4];
 public:
@@ -130,7 +143,7 @@ class E2TFTexture : public TzTexture
 {
 public:
 	uint8_t unknown1 = 0;
-	AlphaMode AlphaBehavior;
+	//AlphaMode AlphaBehavior;
 	uint8_t unknown2 = 1;
 	uint8_t base_color[4];
 

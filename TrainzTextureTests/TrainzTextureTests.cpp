@@ -73,6 +73,7 @@ GLuint loadTexture(int texIndex)
 	{
 	default:
 		MessageBoxA(0, ("Unhandled texture format: " + FormatString(activeTex->Format)).c_str(), "info", MB_OK);
+		[[fallthrough]];
 	case TextureFormat::BGR0888:
 		format = GL_BGRA;
 		internalformat = GL_RGB;
@@ -213,6 +214,21 @@ std::string AlphaString(const AlphaMode& mode)
 	}
 }
 
+//std::string UsageString(const TextureUsage& usage)
+//{
+//	switch (usage)
+//	{
+//	case TextureUsage::Mesh:
+//		return "mesh";
+//	case TextureUsage::UI:
+//		return "UI";
+//	case TextureUsage::Icon:
+//		return "icon";
+//	default:
+//		return ("unknown - " + std::to_string((uint32_t)usage));
+//	}
+//}
+
 void SetTextureInfo()
 {
 	TextureInfo.str(std::string()); //clear the stringstream
@@ -233,7 +249,7 @@ void SetTextureInfo()
 	else
 		wrapstring << (activeTex->WrapS == WrapValue::Repeat ? "s" : "") << (activeTex->WrapT == WrapValue::Repeat ? "t" : "");
 	TextureInfo << "Tile: " << wrapstring.str() << "\n";
-
+	TextureInfo << "Alpha: " << AlphaString(activeTex->AlphaBehavior) << "\n";
 	switch (activeTex->ResourceType)
 	{
 	case TzTexture::FileType::JIRF:
@@ -241,18 +257,21 @@ void SetTextureInfo()
 		JIRFTexture* tex = dynamic_cast<JIRFTexture*>(activeTex.get());
 		TextureInfo << "MipHint: " << (tex->Hint == MipHint::Static ? "static" : "dynamic") << "\n";
 		TextureInfo << "Filter min: " << tex->MinFilter << " mag: " << tex->MagFilter << " mip: " << tex->MipFilter << "\n";
+		if (tex->version == 0x108)
+			TextureInfo << "Base Color: R: " << (uint32_t)tex->base_color[0] << " G: " << (uint32_t)tex->base_color[1] << " B: " << (uint32_t)tex->base_color[2] << " A: " << (uint32_t)tex->base_color[3] << "\n";
+		//TextureInfo << "Usage Type: " << UsageString(tex->UsageType) << "\n";
 		TextureInfo << "Unknown Values: \n";
-		TextureInfo << tex->unknown1 << " (0x103)\n";
+		//TextureInfo << tex->unknown1 << " (0x103)\n";
 		if (tex->version >= 0x104)
 			TextureInfo << tex->unknown2 << " (0x104)\n";
-		if (tex->version == 0x107)
+		if (tex->version >= 0x107)
 			TextureInfo << tex->unknown3[0] << " " << tex->unknown3[1] << " " << tex->unknown3[2] << " " << tex->unknown3[3] << " (0x107)\n";
 		break;
 	}
 	case TzTexture::FileType::E2TF:
 	{
 		E2TFTexture* tex = dynamic_cast<E2TFTexture*>(activeTex.get());
-		TextureInfo << "Alpha: " << AlphaString(tex->AlphaBehavior) << "\n";
+		//TextureInfo << "Alpha: " << AlphaString(tex->AlphaBehavior) << "\n";
 		TextureInfo << "Reference Color: R: " << (uint32_t)tex->base_color[0] << " G: " << (uint32_t)tex->base_color[1] << " B: " << (uint32_t)tex->base_color[2] << " A: " << (uint32_t)tex->base_color[3] << "\n";
 		TextureInfo << "Unknown Values: " << (uint32_t)tex->unknown1 << " " << (uint32_t)tex->unknown2 << " (default 0 1)\n";
 		break;
@@ -610,6 +629,43 @@ void saveTex()
 	//GetOpenFileNameA();
 }
 
+void openTexture(const char* path)
+{
+	currentFile = std::filesystem::path(path);
+	for (auto& tex : loadedTextures)
+		deleteTexture(tex);
+	loadedTextures.clear();
+	activeTex = read_texture(path);
+	if (activeTex.get())
+	{
+		SetTextureInfo();
+		for (int i = 0; i < activeTex->Textures.size(); i++)
+			loadedTextures.push_back(loadTexture(i));
+	}
+}
+//switch between textures in the active directory
+void scrollTex(int wheel)
+{
+	std::vector<std::filesystem::path> dirFiles;
+	for (const auto& entry : std::filesystem::directory_iterator(currentFile.parent_path()))
+	{
+		if (entry.path().extension().string() == ".texture")
+			dirFiles.push_back(entry.path());
+	}
+	auto curIndex = dirFiles.begin();
+	curIndex = std::find(dirFiles.begin(), dirFiles.end(), currentFile);
+	if (wheel > 0) // scroll up
+	{
+		if (curIndex != dirFiles.begin())
+			openTexture((--curIndex)->string().c_str());
+	}
+	else if (wheel < 0) // scroll down
+	{
+		if (++curIndex != dirFiles.end())
+			openTexture((curIndex)->string().c_str());
+	}
+}
+
 int main(int argc, char** argv)
 {
 	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
@@ -682,14 +738,7 @@ int main(int argc, char** argv)
 			else if (event.type == SDL_DROPFILE)
 			{
 				//MultiByteToWideChar(CP_UTF8, 0, event.drop.file, -1, nameW, MAX_PATH);
-				currentFile = std::filesystem::path(event.drop.file);
-				for (auto& tex : loadedTextures)
-					deleteTexture(tex);
-				loadedTextures.clear();
-				activeTex = read_texture(event.drop.file);
-				SetTextureInfo();
-				for (int i = 0; i < activeTex->Textures.size(); i++)
-					loadedTextures.push_back(loadTexture(i));
+				openTexture(event.drop.file);
 			}
 
 			switch (event.type)
@@ -701,6 +750,9 @@ int main(int argc, char** argv)
 					saveTex();
 				break;
 			}
+			case SDL_MOUSEWHEEL:
+				scrollTex(event.wheel.y);
+				break;
 			}
 			//if (event.type == SDL_WINDOWEVENT)
 			//{
