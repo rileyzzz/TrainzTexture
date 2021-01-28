@@ -21,9 +21,15 @@
     <ClCompile Include="TextureSave.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ETC2decompress.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TextureSave.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ETC2decompress.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

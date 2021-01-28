@@ -156,10 +156,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ETC2decompress.cpp" />
     <ClCompile Include="TextureSave.cpp" />
     <ClCompile Include="TrainzTextureTests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ETC2decompress.h" />
     <ClInclude Include="TextureSave.h" />
   </ItemGroup>
   <ItemGroup>

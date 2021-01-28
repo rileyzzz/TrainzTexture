@@ -2,6 +2,7 @@
 #include <fstream>
 #include "TextureSave.h"
 #include "DirectXTex.h"
+#include "ETC2decompress.h"
 
 DirectX::Image dxImg(const TzTexture& tex, int texIndex)
 {
@@ -54,7 +55,11 @@ DirectX::Image dxImg(const TzTexture& tex, int texIndex)
 		pitch = tex.Width * 16;
 		break;
 	case TextureFormat::MFTS_ETC2:
-		std::cout << "ETC2 export not currently supported.\n";
+		//std::cout << "ETC2 export not currently supported.\n";
+		img.format = DXGI_FORMAT::DXGI_FORMAT_B8G8R8X8_UNORM;
+
+		pitch = tex.Width * 4;
+
 		//compressed = true;
 		//format = GL_COMPRESSED_RGB8_ETC2;
 		break;
@@ -66,6 +71,14 @@ DirectX::Image dxImg(const TzTexture& tex, int texIndex)
 	img.rowPitch = pitch; //unsure
 	img.slicePitch = mip.size;
 	img.pixels = mip.data;
+
+	if (tex.Format == TextureFormat::MFTS_ETC2)
+	{
+		img.pixels = decompressETC2(mip.size, mip.data, tex);
+		img.slicePitch = 4 * tex.Width * tex.Height;
+	}
+
+
 	return img;
 }
 
@@ -75,6 +88,9 @@ bool SaveDDS(const wchar_t* path, const TzTexture& tex, int texIndex)
 	DirectX::Image img = dxImg(tex, texIndex);
 
 	HRESULT hr = DirectX::SaveToDDSFile(img, DirectX::DDS_FLAGS_NONE, path);
+	if (tex.Format == TextureFormat::MFTS_ETC2)
+		delete[] img.pixels;
+
 	if (FAILED(hr))
 	{
 		std::cout << "Failed to save image.\n";
@@ -90,6 +106,9 @@ bool SaveTGA(const wchar_t* path, const TzTexture& tex, int texIndex)
 	DirectX::Image img = dxImg(tex, texIndex);
 
 	HRESULT hr = DirectX::SaveToTGAFile(img, path);
+	if (tex.Format == TextureFormat::MFTS_ETC2)
+		delete[] img.pixels;
+
 	if (FAILED(hr))
 	{
 		std::cout << "Failed to save image.\n";
@@ -105,6 +124,9 @@ bool SavePNG(const wchar_t* path, const TzTexture& tex, int texIndex)
 	DirectX::Image img = dxImg(tex, texIndex);
 
 	HRESULT hr = DirectX::SaveToWICFile(img, DirectX::WIC_FLAGS_NONE, GetWICCodec(DirectX::WIC_CODEC_PNG), path);
+	if (tex.Format == TextureFormat::MFTS_ETC2)
+		delete[] img.pixels;
+
 	if (FAILED(hr))
 	{
 		std::cout << "Failed to save image.\n";
@@ -125,6 +147,9 @@ bool SaveHDR(const wchar_t* path, const TzTexture& tex, int texIndex)
 	DirectX::Image img = dxImg(tex, texIndex);
 
 	HRESULT hr = DirectX::SaveToHDRFile(img, path);
+	if (tex.Format == TextureFormat::MFTS_ETC2)
+		delete[] img.pixels;
+
 	if (FAILED(hr))
 	{
 		std::cout << "Failed to save image.\n";

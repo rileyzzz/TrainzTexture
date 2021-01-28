@@ -14,6 +14,7 @@
 #include "TrainzTexture.h"
 #include "TextureSave.h"
 #include <filesystem>
+#include "ETC2decompress.h"
 
 int scrw = 1400;
 int scrh = 1024;
@@ -101,7 +102,10 @@ GLuint loadTexture(int texIndex)
 	case TextureFormat::MFTS_ETC2:
 		compressed = true;
 		format = GL_COMPRESSED_RGB8_ETC2;
-		//format = GL_COMPRESSED_RGBA8_ETC2_EAC;
+		//format = GL_RGBA;
+		//compressed = false;
+		//auto& etcmip = activeTex->Textures[texIndex].textureMips[0];
+		//etcmip.data = decompressETC2(etcmip.size, etcmip.data, *activeTex);
 		break;
 	}
 
