@@ -297,11 +297,14 @@ void resizeGLScene(GLsizei width, GLsizei height)
 }
 
 int filterEvent(void* userdata, SDL_Event* event) {
-	if (event->type == SDL_WINDOWEVENT && event->window.event == SDL_WINDOWEVENT_RESIZED) {
+	if (event->type == SDL_WINDOWEVENT && event->window.event == SDL_WINDOWEVENT_RESIZED)
+	{
+		glClear(GL_COLOR_BUFFER_BIT);
 		scrw = event->window.data1;
 		scrh = event->window.data2;
 		resizeGLScene(event->window.data1, event->window.data2);
 		draw();
+		SDL_GL_SwapWindow(window);
 		return 0;
 	}
 	return 1;
@@ -740,6 +743,15 @@ int main(int argc, char** argv)
 				//MultiByteToWideChar(CP_UTF8, 0, event.drop.file, -1, nameW, MAX_PATH);
 				openTexture(event.drop.file);
 			}
+			//else if (event.type == SDL_WINDOWEVENT)
+			//{
+			//	if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+			//	{
+			//		scrw = event.window.data1;
+			//		scrh = event.window.data2;
+			//		resizeGLScene(event.window.data1, event.window.data2);
+			//	}
+			//}
 
 			switch (event.type)
 			{
@@ -754,15 +766,7 @@ int main(int argc, char** argv)
 				scrollTex(event.wheel.y);
 				break;
 			}
-			//if (event.type == SDL_WINDOWEVENT)
-			//{
-			//	if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-			//	{
-			//		scrw = event.window.data1;
-			//		scrh = event.window.data2;
-			//		resizeGLScene(event.window.data1, event.window.data2);
-			//	}
-			//}
+
 		}
 		glClear(GL_COLOR_BUFFER_BIT);
 
