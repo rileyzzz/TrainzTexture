@@ -723,6 +723,18 @@ int main(int argc, char** argv)
 	//for(int i = 0; i < activeTex->Textures.size(); i++)
 	//	loadedTextures.push_back(loadTexture(i));
 
+	//const char* texdir = "G:/P9L/MFTSRips/MFTSPC/tinytrainz_allkuid/";
+	//for (const auto& file : std::filesystem::recursive_directory_iterator(texdir))
+	//{
+	//	if (file.path().extension() == ".texture")
+	//	{
+	//		openTexture(file.path().string().c_str());
+	//		std::filesystem::path p = file.path();
+	//		std::wstring newpath = p.replace_extension().wstring() + L".tga";
+	//		saveTexFile(newpath.c_str());
+	//		SaveTextureTXT(newpath.c_str(), *activeTex);
+	//	}
+	//}
 
 	resizeGLScene(scrw, scrh);
 

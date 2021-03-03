@@ -130,7 +130,7 @@ public:
 	uint32_t MagFilter;
 	uint32_t MipFilter;
 	//TextureUsage UsageType;
-	float unknown2 = 1.0f; //world size? 16 for baseboard
+	float unknown2 = 1.0f; //world size? 16 for baseboard - also seems to correlate with anisotropy
 	uint32_t unknown3[4] = { 0x00 };
 	float base_color[4];
 public:

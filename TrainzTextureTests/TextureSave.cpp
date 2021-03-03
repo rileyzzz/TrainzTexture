@@ -105,7 +105,26 @@ bool SaveTGA(const wchar_t* path, const TzTexture& tex, int texIndex)
 	std::cout << "Saving...\n";
 	DirectX::Image img = dxImg(tex, texIndex);
 
+	if (tex.Format == TextureFormat::DXT1 || tex.Format == TextureFormat::DXT3 || tex.Format == TextureFormat::DXT5)
+	{
+		DirectX::ScratchImage out;
+		//HRESULT dec = DirectX::Decompress(img, tex.Format == TextureFormat::DXT1 ? DXGI_FORMAT::DXGI_FORMAT_B8G8R8X8_UNORM : DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM, out);
+		HRESULT dec = DirectX::Decompress(img, DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM, out);
+		if (!FAILED(dec))
+		{
+			img = out.GetImages()[0];
+			//img.slicePitch = img.width * img.height * 4;
+		}
+	}
+
+	//DirectX::Convert(img, DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM, DirectX::TEX_FILTER_DEFAULT, DirectX::TEX_THRESHOLD_DEFAULT, out);
+	//HRESULT hr = DirectX::SaveToTGAFile(img, path);
+
+	if (!img.pixels)
+		return false;
+
 	HRESULT hr = DirectX::SaveToTGAFile(img, path);
+	
 	if (tex.Format == TextureFormat::MFTS_ETC2)
 		delete[] img.pixels;
 
