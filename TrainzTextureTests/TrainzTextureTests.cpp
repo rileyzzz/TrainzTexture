@@ -272,8 +272,8 @@ void SetTextureInfo()
 	{
 		E2TFTexture* tex = dynamic_cast<E2TFTexture*>(activeTex.get());
 		//TextureInfo << "Alpha: " << AlphaString(tex->AlphaBehavior) << "\n";
-		TextureInfo << "Reference Color: R: " << (uint32_t)tex->base_color[0] << " G: " << (uint32_t)tex->base_color[1] << " B: " << (uint32_t)tex->base_color[2] << " A: " << (uint32_t)tex->base_color[3] << "\n";
-		TextureInfo << "Unknown Values: " << (uint32_t)tex->unknown1 << " " << (uint32_t)tex->unknown2 << " (default 0 1)\n";
+		TextureInfo << "Color Hint: R: " << (uint32_t)tex->colorHint[0] << " G: " << (uint32_t)tex->colorHint[1] << " B: " << (uint32_t)tex->colorHint[2] << " A: " << (uint32_t)tex->colorHint[3] << "\n";
+		TextureInfo << "Mip Skip: " << (uint32_t)tex->mipSkip << "\n";
 		break;
 	}
 	}

@@ -125,7 +125,7 @@ bool E2TFTexture::Serialize(IOArchive& Ar)
 	Ar << Width;
 	Ar << Height;
 	std::cout << "version " << version << " size: " << Width << "x" << Height << "\n";
-	Ar << unknown1;
+	Ar << mipSkip;
 
 	//if(Ar.IsSaving() && Textures.size()) MipCount = Textures[0].textureMips.size();
 	uint8_t E2MipCount = MipCount;
@@ -148,11 +148,13 @@ bool E2TFTexture::Serialize(IOArchive& Ar)
 
 	uint8_t TexWrapS = GetE2Wrap(WrapS);
 	uint8_t TexWrapT = GetE2Wrap(WrapT);
+	uint8_t TexWrapR = GetE2Wrap(WrapR);
 	Ar << TexWrapS;
 	Ar << TexWrapT;
+	Ar << TexWrapR;
 	if (Ar.IsLoading()) WrapS = GetWrap(TexWrapS);
 	if (Ar.IsLoading()) WrapT = GetWrap(TexWrapT);
-	Ar << unknown2;
+	if (Ar.IsLoading()) WrapR = GetWrap(TexWrapR);
 
 	char ReadFormat[5];
 	strcpy_s(ReadFormat, GetE2Format(Format));
@@ -166,7 +168,7 @@ bool E2TFTexture::Serialize(IOArchive& Ar)
 
 	std::cout << "wrap: " << wrapstring.str() << " format: " << &ReadFormat[0] << "\n";
 
-	Ar.Serialize(&base_color[0], 4);
+	Ar.Serialize(&colorHint[0], 4);
 
 	
 	if (Ar.IsLoading())
@@ -277,10 +279,11 @@ TextureType GetType(const uint8_t& type)
 
 uint8_t GetE2Wrap(const WrapValue& wrap)
 {
+	//verified correct https://forums.auran.com/trainz/showthread.php?128330-Updated-file-format-parsers
 	switch (wrap)
 	{
 	default:
-	case WrapValue::Clamp:
+	case WrapValue::Clamp_To_Edge:
 		return 1;
 	case WrapValue::Repeat:
 		return 3;
@@ -294,7 +297,7 @@ WrapValue GetWrap(const uint8_t& wrap)
 	default:
 		std::cout << "Unknown wrap value " << static_cast<int>(wrap) << "\n";
 	case 1: //intentional pass through
-		return WrapValue::Clamp;
+		return WrapValue::Clamp_To_Edge;
 	case 3:
 		return WrapValue::Repeat;
 	}

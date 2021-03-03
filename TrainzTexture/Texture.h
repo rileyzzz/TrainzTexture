@@ -142,10 +142,10 @@ public:
 class E2TFTexture : public TzTexture
 {
 public:
-	uint8_t unknown1 = 0;
-	//AlphaMode AlphaBehavior;
-	uint8_t unknown2 = 1;
-	uint8_t base_color[4];
+	uint8_t mipSkip = 0;
+	WrapValue WrapR;
+
+	uint8_t colorHint[4];
 
 public:
 	bool Serialize(IOArchive& Ar) override;
