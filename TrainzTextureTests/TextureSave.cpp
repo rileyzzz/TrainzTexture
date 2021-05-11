@@ -1,5 +1,7 @@
 #include <filesystem>
 #include <fstream>
+#include <SDL.h>
+#include <GL/glew.h>
 #include "TextureSave.h"
 #include "DirectXTex.h"
 #include "ETC2decompress.h"
@@ -68,8 +70,11 @@ DirectX::Image dxImg(const TzTexture& tex, int texIndex)
 	//img.rowPitch = /*<number of bytes in a scanline of the source data>*/;
 	//img.rowPitch = tex.Width; //unsure
 	//img.rowPitch = tex.Width * pitch; //unsure
-	img.rowPitch = pitch; //unsure
+
+	//img.rowPitch = pitch; //unsure
 	img.slicePitch = mip.size;
+	DirectX::ComputePitch(img.format, img.width, img.height, img.rowPitch, img.slicePitch);
+
 	img.pixels = mip.data;
 
 	if (tex.Format == TextureFormat::MFTS_ETC2)
@@ -103,29 +108,47 @@ bool SaveDDS(const wchar_t* path, const TzTexture& tex, int texIndex)
 bool SaveTGA(const wchar_t* path, const TzTexture& tex, int texIndex)
 {
 	std::cout << "Saving...\n";
+
+
 	DirectX::Image img = dxImg(tex, texIndex);
 
 	if (tex.Format == TextureFormat::DXT1 || tex.Format == TextureFormat::DXT3 || tex.Format == TextureFormat::DXT5)
 	{
-		DirectX::ScratchImage out;
-		//HRESULT dec = DirectX::Decompress(img, tex.Format == TextureFormat::DXT1 ? DXGI_FORMAT::DXGI_FORMAT_B8G8R8X8_UNORM : DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM, out);
-		HRESULT dec = DirectX::Decompress(img, DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM, out);
-		if (!FAILED(dec))
-		{
-			img = out.GetImages()[0];
-			//img.slicePitch = img.width * img.height * 4;
-		}
+		uint32_t type = 0;
+		if (tex.Format == TextureFormat::DXT1)			type = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+		else if (tex.Format == TextureFormat::DXT3)		type = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+		else if (tex.Format == TextureFormat::DXT5)		type = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+
+		img.format = DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM;
+		const auto& mip = tex.Textures[texIndex].textureMips[0];
+		img.pixels = decompressType(type, mip.size, mip.data, tex);
+		DirectX::ComputePitch(img.format, img.width, img.height, img.rowPitch, img.slicePitch);
 	}
+
+	//if (tex.Format == TextureFormat::DXT3 || tex.Format == TextureFormat::DXT5)
+	//{
+	//	DirectX::ScratchImage out;
+	//	//HRESULT dec = DirectX::Decompress(img, tex.Format == TextureFormat::DXT1 ? DXGI_FORMAT::DXGI_FORMAT_B8G8R8X8_UNORM : DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM, out);
+	//	HRESULT dec = DirectX::Decompress(img, DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM, out);
+	//	if (!FAILED(dec))
+	//	{
+	//		std::cout << "Decompressed.\n";
+	//		img = out.GetImages()[0];
+	//		//img.slicePitch = img.width * img.height * 4;
+	//	}
+	//	else
+	//		std::cout << "Decompression failed!\n";
+	//}
 
 	//DirectX::Convert(img, DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM, DirectX::TEX_FILTER_DEFAULT, DirectX::TEX_THRESHOLD_DEFAULT, out);
 	//HRESULT hr = DirectX::SaveToTGAFile(img, path);
 
-	if (!img.pixels)
+	if (img.pixels == nullptr)
 		return false;
 
 	HRESULT hr = DirectX::SaveToTGAFile(img, path);
 	
-	if (tex.Format == TextureFormat::MFTS_ETC2)
+	if (tex.Format == TextureFormat::MFTS_ETC2 || tex.Format == TextureFormat::DXT1 || tex.Format == TextureFormat::DXT3 || tex.Format == TextureFormat::DXT5)
 		delete[] img.pixels;
 
 	if (FAILED(hr))

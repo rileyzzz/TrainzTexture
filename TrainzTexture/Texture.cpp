@@ -168,6 +168,12 @@ bool E2TFTexture::Serialize(IOArchive& Ar)
 
 	std::cout << "wrap: " << wrapstring.str() << " format: " << &ReadFormat[0] << "\n";
 
+	if (Format == TextureFormat::ASTC)
+	{
+		Ar << blockSizeX;
+		Ar << blockSizeY;
+	}
+
 	Ar.Serialize(&colorHint[0], 4);
 
 	
@@ -318,6 +324,8 @@ const char* GetE2Format(TextureFormat& format)
 		return "5txd";
 	case TextureFormat::HD4F:
 		return "f4dh";
+	case TextureFormat::ASTC:
+		return "ctsa";
 	}
 }
 
@@ -325,15 +333,18 @@ TextureFormat GetFormat(const char* format)
 {
 	if (strcmp(format, "abgr") == 0)
 		return TextureFormat::BGRA8888;
-	else if (strcmp(format, "1txd") == 0)
+	if (strcmp(format, "1txd") == 0)
 		return TextureFormat::DXT1;
-	else if (strcmp(format, "3txd") == 0)
+	if (strcmp(format, "3txd") == 0)
 		return TextureFormat::DXT3;
-	else if (strcmp(format, "5txd") == 0)
+	if (strcmp(format, "5txd") == 0)
 		return TextureFormat::DXT5;
-	else if (strcmp(format, "f4dh") == 0)
+	if (strcmp(format, "f4dh") == 0)
 		return TextureFormat::HD4F;
+	if (strcmp(format, "ctsa") == 0)
+		return TextureFormat::ASTC;
 
 	std::cout << "Unknown format " << format << "\n";
+	assert(false);
 	return TextureFormat::RGBA8888;
 }

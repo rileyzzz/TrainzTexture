@@ -4,6 +4,7 @@
 #include <iostream>
 #include <numeric>
 #include <sstream>
+#include <cassert>
 #define NOMINMAX
 #include <windows.h>
 #include <shobjidl.h>
@@ -68,6 +69,10 @@ GLuint loadTexture(int texIndex)
 	GLenum internalformat = format;
 	bool compressed = false;
 	GLenum dtype = GL_UNSIGNED_BYTE;
+
+	//int dataOffset = 0;
+	const auto& mip = activeTex->Textures[texIndex].textureMips[0];
+
 	//GLenum format = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
 	switch (activeTex->Format)
 	{
@@ -108,6 +113,12 @@ GLuint loadTexture(int texIndex)
 		//auto& etcmip = activeTex->Textures[texIndex].textureMips[0];
 		//etcmip.data = decompressETC2(etcmip.size, etcmip.data, *activeTex);
 		break;
+	case TextureFormat::ASTC:
+		compressed = true;
+		auto E2Tex = std::dynamic_pointer_cast<E2TFTexture>(activeTex);
+		assert(E2Tex);
+
+		format = GL_COMPRESSED_RGBA_ASTC_8x8_KHR;
 	}
 
 	//for (int i = 0; i < activeTex->textureMips.size(); i++)
@@ -117,7 +128,7 @@ GLuint loadTexture(int texIndex)
 	//	//glTexImage2D(GL_TEXTURE_2D, i, GL_RGBA, activeTex->Width, activeTex->Height, 0, format, GL_UNSIGNED_BYTE, activeTex->textureMips[0].data);
 	//	glCompressedTexImage2D(GL_TEXTURE_2D, i, format, mipWidth, mipHeight, 0, activeTex->textureMips[i].size, activeTex->textureMips[i].data);
 	//}
-	const auto& mip = activeTex->Textures[texIndex].textureMips[0];
+	
 	if(!compressed)
 		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, activeTex->Width, activeTex->Height, 0, format, dtype, mip.data);
 	else
@@ -723,7 +734,7 @@ int main(int argc, char** argv)
 	//for(int i = 0; i < activeTex->Textures.size(); i++)
 	//	loadedTextures.push_back(loadTexture(i));
 
-	//const char* texdir = "G:/P9L/MFTSRips/MFTSPC/tinytrainz_allkuid/";
+	//const char* texdir = "G:/P9L/MFTSRips/MFTSPC/install/tinytrainz_allkuid/";
 	//for (const auto& file : std::filesystem::recursive_directory_iterator(texdir))
 	//{
 	//	if (file.path().extension() == ".texture")
@@ -733,6 +744,7 @@ int main(int argc, char** argv)
 	//		std::wstring newpath = p.replace_extension().wstring() + L".tga";
 	//		saveTexFile(newpath.c_str());
 	//		SaveTextureTXT(newpath.c_str(), *activeTex);
+	//		//printf("tex %ls\n", newpath.c_str());
 	//	}
 	//}
 

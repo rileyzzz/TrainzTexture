@@ -49,7 +49,8 @@ enum class TextureFormat : uint32_t
 	DXT5 = 12,
 	DXT5_BridgeIt = 13,
 	MFTS_ETC2 = 28,
-	HD4F //E2TF
+	HD4F, //E2TF
+	ASTC //E2TF
 };
 
 uint8_t GetE2Alpha(const AlphaMode& mode);
@@ -144,6 +145,9 @@ class E2TFTexture : public TzTexture
 public:
 	uint8_t mipSkip = 0;
 	WrapValue WrapR;
+
+	uint8_t blockSizeX = 0;
+	uint8_t blockSizeY = 0;
 
 	uint8_t colorHint[4];
 
