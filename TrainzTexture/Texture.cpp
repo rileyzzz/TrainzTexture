@@ -178,21 +178,22 @@ bool E2TFTexture::Serialize(IOArchive& Ar)
 	Ar.Serialize(&colorHint[0], 4);
 
 	
-	if (Ar.IsLoading())
+
+	for (int i = 0; i < MipCount; i++)
 	{
-		for (int i = 0; i < MipCount; i++)
+		for (auto& tex : Textures)
 		{
-			for (auto& tex : Textures)
-			{
-				uint32_t mipSize = 0;
-				Ar << mipSize;
-				std::cout << "mip size: " << mipSize << "\n";
-				//textureMips.emplace(textureMips.begin(), mipSize);
-				tex.textureMips.emplace_back(mipSize);
-				//textureMips[i] = MipData(mipSize);
-			}
+			uint32_t mipSize = 0;
+			if (Ar.IsSaving())
+				mipSize = tex.textureMips[i].size;
+			Ar << mipSize;
+			std::cout << "mip size: " << mipSize << "\n";
+			//textureMips.emplace(textureMips.begin(), mipSize);
+			if (Ar.IsLoading()) tex.textureMips.emplace_back(mipSize);
+			//textureMips[i] = MipData(mipSize);
 		}
 	}
+	
 
 	
 	//for (int i = 0; i < textureMips.size(); i++)
@@ -226,7 +227,7 @@ bool E2TFTexture::Serialize(IOArchive& Ar)
 
 	
 
-	std::cout << "file end " << Ar.tellg() << "\n";
+	//std::cout << "file end " << Ar.tellg() << "\n";
 
 	return true;
 }

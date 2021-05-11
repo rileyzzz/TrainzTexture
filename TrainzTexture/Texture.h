@@ -3,6 +3,12 @@
 #include <vector>
 class IOArchive;
 
+#ifdef _MSC_VER
+#define TEXTURE_API __declspec(dllexport)
+#else
+#define TEXTURE_API
+#endif
+
 //enum class AlphaMode : uint8_t
 //{
 //	Opaque = 1,
@@ -97,7 +103,7 @@ public:
 		E2TF
 	};
 	FileType ResourceType;
-	uint32_t version = 0;
+	uint32_t version = 7;
 	uint32_t Width;
 	uint32_t Height;
 	TextureType Type;
@@ -106,15 +112,15 @@ public:
 	WrapValue WrapT;
 	TextureFormat Format;
 
-	AlphaMode AlphaBehavior;
+	AlphaMode AlphaBehavior = AlphaMode::Opaque;
 
 	std::vector<TextureData> Textures;
 	uint32_t MipCount = 0;
 
 	//TzTexture(const char* filepath);
-	virtual bool Serialize(IOArchive& Ar) = 0;
+	TEXTURE_API virtual bool Serialize(IOArchive& Ar) = 0;
 
-	TzTexture(FileType InType) : ResourceType(InType), Width(0), Height(0) { }
+	TEXTURE_API TzTexture(FileType InType) : ResourceType(InType), Width(0), Height(0) { }
 };
 
 enum class MipHint : uint32_t
@@ -135,24 +141,29 @@ public:
 	uint32_t unknown3[4] = { 0x00 };
 	float base_color[4];
 public:
-	bool Serialize(IOArchive& Ar) override;
+	TEXTURE_API bool Serialize(IOArchive& Ar) override;
 
-	JIRFTexture(IOArchive& Ar);
+	TEXTURE_API JIRFTexture(IOArchive& Ar);
 };
 
 class E2TFTexture : public TzTexture
 {
 public:
 	uint8_t mipSkip = 0;
-	WrapValue WrapR;
+	WrapValue WrapR = WrapValue::Clamp_To_Edge;
 
 	uint8_t blockSizeX = 0;
 	uint8_t blockSizeY = 0;
 
-	uint8_t colorHint[4];
+	uint8_t colorHint[4] = { 0x00 };
 
 public:
-	bool Serialize(IOArchive& Ar) override;
+	TEXTURE_API bool Serialize(IOArchive& Ar) override;
 
-	E2TFTexture(IOArchive& Ar);
+	TEXTURE_API E2TFTexture(IOArchive& Ar);
+
+	TEXTURE_API E2TFTexture()
+		: TzTexture(FileType::E2TF)
+	{
+	}
 };

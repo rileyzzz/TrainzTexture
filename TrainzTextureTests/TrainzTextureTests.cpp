@@ -751,6 +751,10 @@ int main(int argc, char** argv)
 	//	}
 	//}
 
+	if (argc > 1)
+		openTexture(argv[1]);
+
+
 	resizeGLScene(scrw, scrh);
 
 	SDL_SetEventFilter(filterEvent, nullptr);
