@@ -172,6 +172,7 @@ bool E2TFTexture::Serialize(IOArchive& Ar)
 	{
 		Ar << blockSizeX;
 		Ar << blockSizeY;
+		printf("ASTC block size %u %u\n", blockSizeX, blockSizeY);
 	}
 
 	Ar.Serialize(&colorHint[0], 4);

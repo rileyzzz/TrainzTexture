@@ -190,6 +190,8 @@ std::string FormatString(const TextureFormat& format)
 		return "uncompressed HD4F (HDR)";
 	case TextureFormat::MFTS_ETC2:
 		return "compressed ETC2 (mobile)";
+	case TextureFormat::ASTC:
+		return "compressed ASTC (mobile)";
 	default:
 		return ("unknown - " + std::to_string((uint32_t)format));
 	}
@@ -717,6 +719,7 @@ int main(int argc, char** argv)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
+
 	//glClearDepth(1.0f);
 	//glEnable(GL_DEPTH_TEST);
 	//glDepthFunc(GL_LEQUAL);
